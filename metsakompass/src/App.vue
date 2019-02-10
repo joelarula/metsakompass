@@ -1,9 +1,10 @@
 <template>
   <div id="metsakompass">
- 	  <div>Vastanud</div>
- 	  <div id="responded"></div>
- 	  <div>Mittevastanud</div>
- 	  <div id="notresponded"></div>
+  	  <div id="diagram1">
+ 	  	<div id="responded"></div>
+ 	  	<div id="notresponded"></div>
+ 	  </div>
+ 	   <div id="legend">...</div>
   </div>
 </template>
 
@@ -37,11 +38,11 @@ export default {
 	    	},
 	    	responded:{
 	    		name:"responded",
-	    		color:"white",stroke:"black",
+	    		color:"transparent",
 	    		children:[]
 	    	},notresponded:{
 	    		name:"notresponded",
-	    		color:"white",stroke:"black",
+	    		color:"transparent",
 	    		children:[]
 	    	}
 	    }
@@ -59,11 +60,15 @@ export default {
 			    this.headers = headers;
 			    var party = headers.indexOf('Erakonna nimekiri');
 			    var responded = headers.indexOf('Vastanud');
+			    var nr = headers.indexOf('Kandidaadi number');
 			    for(var c in response.body.values){
 		        	var canditate =  response.body.values[c]; 	
-		        	//console.log(canditate);
+		        	
 		        	var p = this.parties[canditate[party]];
 		        	var r = canditate[responded];
+		        	var n = canditate[nr];
+		        	this.candidates[n] = canditate;
+		        	
 		        	p.candidates++;
 		        	if(r != undefined && r == "x"){
 		        		p.responded++;
@@ -74,13 +79,28 @@ export default {
 			    for(var p in this.parties){
 			    	var party = this.parties[p];
 			    	if(party.responded > 0){
-			    		this.responded.children.push({"name":p,total:party.candidates,code:party.code
-			    			, color: party.color,size: this.calculateRespondedPercent(party)});	
-			    		this.notresponded.children.push({"name":p,total:party.candidates, 
-			    			code:party.code, color: party.color,size:this.calculateNotRespondedPercent(party)});
+			    		this.responded.children.push(
+			    			{name:p,
+			    				total:party.candidates,
+			    				code:party.code, 
+			    				color: party.color,
+			    				size: this.calculateRespondedPercent(party)
+			    			});	
+			    		this.notresponded.children.push(
+			    			{name:p,
+			    				total:party.candidates, 
+			    				code:party.code,
+			    				color: party.color,
+			    				size:this.calculateNotRespondedPercent(party)
+			    			});
 			    	}else{
-			    		this.notresponded.children.push({"name":p,total:party.candidates,
-			    			code:party.code, color: party.color,size:this.calculateNotRespondedPercent(party)});
+			    		this.notresponded.children.push(
+			    			{name:p,
+			    				total:party.candidates,
+			    				code:party.code, 
+			    				color: party.color,
+			    				size:this.calculateNotRespondedPercent(party)
+			    			});
 			    	}
 			    	
 			    	
@@ -95,7 +115,7 @@ export default {
   },
   methods:{
 	  drawFeedbackChart: function(data,element){
-		  var w = 400,h = 400,format = d3.format(",d");
+		  var w = 400,h = 300,format = d3.format(",d");
 		  var nodes = d3.layout.pack().size([w - 4, h - 4]).value(function(d) { return d.size; }).nodes(data);
 		
 		  var feedback = d3.select(element)
@@ -106,14 +126,18 @@ export default {
 		  .append("svg:g").attr("class", function(d) { return d.children ? "node" : "leaf node"; })
       		.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 		  
-		  node.append("svg:title").text(function(d) { return d.name +" "+d.total+" kandidaati osavõtt "+d.percent +" %"});
+		  if(element == "#responded"){
+			  node.append("svg:title").text(function(d) { return d.name +" "+d.total+" kandidaati. Vastanuid "+d.size +" %"}); 
+		  }else{
+			  node.append("svg:title").text(function(d) { return d.name +" "+d.total+" kandidaati. Mittevastanuid "+d.size +" %"});
+		  }
+		 
 		  
 	      node.append('svg:circle')
 	        .attr('r', function(d) { return d.r; })
 	        .attr('fill', function(d) { return d.color; })
 	        .attr('class', function(d) { return d.code; })
-	        .attr('title', function(d) { return d.name; })
-	        .attr('stroke', 'grey')
+	        .attr('title', function(d) { return d.name; });
 
 	      node.filter(function(d) { return !d.children; }).append("svg:text")
 	        .attr("text-anchor", "middle")
@@ -142,7 +166,26 @@ export default {
   margin-top: 60px;
 }
 
+#metsakompass{
+	display: flex; /* or inline-flex */
+	flex-direction: row wrap ;
+	
+}
 
+#legend {
+	width: 600px;
+	 flex-grow: 1;
+}
+
+#diagram1 {
+  background: transparent url("./assets/liivakell.png") no-repeat top left;
+  width:  400px;
+}
+
+#diagram1 > DIV {
+	background-color:transparent;
+	width:  400px;
+}
 
 .percentTitle{
 	font: bold 16px sans-serif; 
