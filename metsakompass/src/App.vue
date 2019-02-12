@@ -22,7 +22,7 @@ export default {
 	    return {
 	    	API_KEY: "AIzaSyBm00X5S1A4rNc4MlyR6yRyQaR5un7Qb40", // "AIzaSyDoaUoLlpzmIqWpYg_eAhlbFtRvuAjUcPg", 
 	    	api: "https://sheets.googleapis.com/v4/spreadsheets/11r-tkO-eiBq-Nwj3au7UPEDq4hvc8xuvykwGDIgvgW8",
-	    	sheet1: "https://sheets.googleapis.com/v4/spreadsheets/11r-tkO-eiBq-Nwj3au7UPEDq4hvc8xuvykwGDIgvgW8/values/Sheet1!A1:F1025",
+	    	sheet1: "https://sheets.googleapis.com/v4/spreadsheets/11r-tkO-eiBq-Nwj3au7UPEDq4hvc8xuvykwGDIgvgW8/values/Sheet1!A1:H1025",
 	    	candidates:{},
 	    	headers:[],
 	    	parties:{
@@ -69,10 +69,14 @@ export default {
 		        	var n = canditate[nr];
 		        	this.candidates[n] = canditate;
 		        	
-		        	p.candidates++;
-		        	if(r != undefined && r == "x"){
-		        		p.responded++;
+		        	if(p != undefined){
+			        	p.candidates++;
+			        	if(r != undefined && r == "x"){
+			        		p.responded++;
+			        	}
+		        		
 		        	}
+
 		        }
 		        
 
