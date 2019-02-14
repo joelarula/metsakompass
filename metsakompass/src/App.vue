@@ -7,9 +7,9 @@
   	 <div id="toolbar">
  	   	<div id="items">	
  	       	Järjestan:
- 	       	<v-btn  round small dark  :color="getColor(1)">Metsasõbrad</v-btn>
-     		<v-btn  round small dark  :color="getColor(2)">Elukoht</v-btn>
-     		<v-btn  round small dark  :color="getColor(3)">Erakond</v-btn>
+ 	       	<v-btn  round small dark  :color="getColor(1)" @click.native="setSort(1)">Metsasõbrad</v-btn>
+     		<v-btn  round small dark  :color="getColor(2)" @click.native="setSort(2)">Ringkond</v-btn>
+     		<v-btn  round small dark  :color="getColor(3)" @click.native="setSort(3)">Erakond</v-btn>
  		</div>
  	</div>
   <div id="metsakompass">
@@ -25,17 +25,38 @@
  		<div id="nimekiri">
  	   <v-data-table  hide-actions hide-headers
    			 :headers="tableHeaders"
-   			 :items="candidates"
+   			 :items="sortCandidates"
   		>
   		<template slot="items" slot-scope="props">
-     		 <td>{{ props.item.name }}</td>
-      		 <td class="text-xs-right">{{ props.item.erakond }}</td>
-    		 <td class="text-xs-right">
-    		 	<v-btn color="success" fab dark>
-    		 		{{ props.item.nr }}
-    		 	</v-btn>
-    		 </td>
-    </template>
+     		<template v-if="!props.item.divider">
+    
+     		 	<td>{{ props.item.name }}</td>
+      		 	<td class="text-xs-right">
+      		 	<template v-if="sort==1">
+      		 		{{ props.item.erakond }}
+      		 	</template>
+      		 	<template v-else>
+      		 		<template v-if="props.item.ringkond">
+      		 			{{ props.item.ringkond }}
+      		 		</template>
+      		 		<template v-else>
+      		 			{{ props.item.erakond }}
+      		 		</template>
+      		 	
+      		 	</template>
+      		 	</td>
+    		 	
+    		 	<td class="text-xs-right">
+    		 		<v-btn color="success" fab dark>
+    		 			{{ props.item.nr }}
+    		 		</v-btn>
+    		 	</td>
+    		 
+       			</template>
+    			<template v-else>
+    				<td colspan="3"><a class="elabel" :href="props.item.code" >{{props.item.name}}</a></td>
+    			</template>
+    		</template>
   		
   		</v-data-table>
   		</div>
@@ -68,16 +89,17 @@ export default {
 	    	sort: 1,
 	    	respondersTotal: 0,
 	    	notRespondersTotal: 0,
+	    	chars:["a","b","c","d","e","f","g","h","i","j","k","l"],
 	    	parties:{
-	    		"Erakond Eestimaa Rohelised":{code:"ER",color:"#89B046",image:"/images/rohelised.png",candidates:0,responded:0,notresponded:0},
-	    		"Elurikkuse Erakond":{code:"EE",color:"#F7C640",image:"/images/ere.png",candidates:0,responded:0,notresponded:0},
-	    		"Erakond Eesti 200":{code:"E200",color:"#31758A",image:"/images/eesti200.png",candidates:0,responded:0,notresponded:0},
-	    		"Isamaa Erakond":{code:"IE",color:"#009CE2",image:"/images/isamaa.png",candidates:0,responded:0,notresponded:0},
-	    		"Eesti Reformierakond":{code:"RE",color:"#FFE200",image:"/images/reform.png",candidates:0,responded:0,notresponded:0},
-	    		"Eesti Keskerakond":{code:"KE",color:"#007557",image:"/images/kesk.png",candidates:0,responded:0,notresponded:0},
-	    		"Eesti Vabaerakond":{code:"EV",color:"#0089D1",image:"/images/vaba.png",candidates:0,responded:0,notresponded:0},
-	    		"Eesti Konservatiivne Rahvaerakond":{code:"EK",image:"/images/ekre.png",color:"#0077BD",candidates:0,responded:0,notresponded:0},
-	    		"Sotsiaaldemokraatlik Erakond":{code:"SE",color:"#E10600",image:"/images/sde.png",candidates:0,responded:0,notresponded:0}
+	    		"Erakond Eestimaa Rohelised":{code:"ER",color:"#89B046",image:"/images/rohelised.png",candidates:0,responded:0,notresponded:0,order:"a"},
+	    		"Elurikkuse Erakond":{code:"EE",color:"#F7C640",image:"/images/ere.png",candidates:0,responded:0,notresponded:0,order:"b"},
+	    		"Erakond Eesti 200":{code:"E200",color:"#31758A",image:"/images/eesti200.png",candidates:0,responded:0,notresponded:0,order:"c"},
+	    		"Isamaa Erakond":{code:"IE",color:"#009CE2",image:"/images/isamaa.png",candidates:0,responded:0,notresponded:0,order:"d"},
+	    		"Eesti Reformierakond":{code:"RE",color:"#FFE200",image:"/images/reform.png",candidates:0,responded:0,notresponded:0,order:"e"},
+	    		"Eesti Keskerakond":{code:"KE",color:"#007557",image:"/images/kesk.png",candidates:0,responded:0,notresponded:0,order:"f"},
+	    		"Eesti Vabaerakond":{code:"EV",color:"#0089D1",image:"/images/vaba.png",candidates:0,responded:0,notresponded:0,order:"g"},
+	    		"Eesti Konservatiivne Rahvaerakond":{code:"EK",image:"/images/ekre.png",color:"#0077BD",candidates:0,responded:0,notresponded:0,order:"h"},
+	    		"Sotsiaaldemokraatlik Erakond":{code:"SE",color:"#E10600",image:"/images/sde.png",candidates:0,responded:0,notresponded:0,order:"i"}
 	    	},
 	    	responded:{
 	    		name:"responded",
@@ -105,30 +127,36 @@ export default {
 		  this.$http.get(this.sheet1,{params:{key:this.API_KEY}}).then(response => {
 		       
 			    var headers = response.body.values.shift();
-			    console.log(headers);
 			    this.headers = headers;
 			    var party = headers.indexOf('Erakonna nimekiri');
 			    var responded = headers.indexOf('Vastanud');
 			    var f = headers.indexOf('First Name');
 			    var l = headers.indexOf('Last Name');
 			    var nr = headers.indexOf('Kandidaadi number');
+			    var rk = headers.indexOf('Omavalitsus');
 			    for(var c in response.body.values){
 		        	var canditate =  response.body.values[c]; 	
 		        	
 		        	var p = this.parties[canditate[party]];
 		        	var r = canditate[responded];
 		        	var n = canditate[nr];
+		        	var ring = canditate[rk] != null ? canditate[rk] : "x";
 		        	
 		        	canditate.nr  = n;
+		        	
+		        	canditate.ringkond = ring;
+		        	canditate.divider=false;
 		        	canditate.erakond = canditate[party];
 		        	canditate.name = canditate[f]+" "+canditate[l];
-		        	this.candidates.push(canditate);
+		        	
 		        	
 		        	if(p != undefined){
+		        		canditate.party  = p;
 			        	p.candidates++;
 			        	if(r != undefined && r == "x"){
 			        		this.respondersTotal++;
 			        		p.responded++;
+			        		this.candidates.push(canditate);
 			        	}else{
 			        		p.notresponded++;
 			        		this.notRespondersTotal++;
@@ -138,9 +166,10 @@ export default {
 
 		        }
 		        
-
+				var weights =  [];
 			    for(var p in this.parties){
 			    	var party = this.parties[p];
+			    	weights.push({responded:party.responded,party:p});
 			    	if(party.responded > 0){
 			    		this.responded.children.push(
 			    			{name:p,
@@ -171,13 +200,78 @@ export default {
 			    	
 			    	
 			    }
-			      
+			    
+			    weights.sort((a, b) => {return b.responded-a.responded});
+			    for(var i in weights){
+			    	var p = weights[i];
+			    	this.parties[p.party].order = this.chars[i];
+			    }
+			    
 		        this.drawFeedbackChart(this.responded,"#responded");
 		        this.drawFeedbackChart(this.notresponded,"#notresponded");
 
 		        
 		  });	      
 	   });
+  },
+  computed:{
+	sortCandidates: function(){
+		if(this.sort == 1){
+			return this.candidates.sort((a, b) => {
+				var c = a[2]+a[1];
+				var d = b[2]+b[1];
+				return c.localeCompare(d)
+				}
+			);
+		}else if (this.sort == 3){
+			
+			var erakond = "";
+			var sorted = this.candidates.sort((a, b) => {
+				var c = (a.party != undefined ? a.party.order : "j" )+a.erakond+a[2]+a[1];
+				var d = (b.party != undefined ? b.party.order : "j" )+b.erakond+b[2]+b[1];
+				return c.localeCompare(d)}
+			);
+			var  result = [];
+			for(var i in sorted){
+				var c = sorted[i];
+				if(c.erakond.localeCompare(erakond) !=0){
+					erakond = c.erakond;
+					result.push({name:c.erakond, divider: true,code:c.party ? "#"+c.party.code: "#YX"});
+				}
+				result.push(c);
+			
+			}
+			
+			return result
+			
+		}else{
+			var ringkond = "";
+			var sorted = this.candidates.sort((a, b) => {
+				var c = a.ringkond+a.erakond+a[2]+a[1];
+				var d = b.ringkond+b.erakond+b[2]+b[1];
+				return c.localeCompare(d)}
+			);
+			var  result = [];
+			for(var i in sorted){
+				var c = sorted[i];
+				if(c.ringkond.localeCompare(ringkond) !=0){
+					ringkond = c.ringkond;
+					result.push({name:c.ringkond, divider: true,code:"#"+c.ringkond});
+				}
+				result.push(c);
+			
+			}
+			
+			return result
+			
+		}
+		
+		
+
+		
+		
+		
+	}  
   },
   methods:{
 	  drawFeedbackChart: function(data,element){
@@ -216,7 +310,8 @@ export default {
 	        .attr('class', function(d) { return d.responded ? "responded" : "notresponded"; })
 	        .attr('fill', function(d) { return d.color; })
 	        .attr('filter', function(d) { return "url(#"+d.code+")"; })
-	        .attr('title', function(d) { return d.name; });
+	        .attr('title', function(d) { return d.name; })
+	        .on("click", function(d){console.log(d)}) 
 
 	      node.filter(function(d) { return !d.children; }).append("svg:text")
 	       .attr("text-anchor", "middle")
@@ -237,7 +332,11 @@ export default {
 		  }else{
 			  return "blue-grey lighten-1";
 		  }
+	  },
+	  setSort(i){
+		 this.sort = i;
 	  }
+	  
   }
 }
 </script>
@@ -268,7 +367,7 @@ export default {
 }
 
 #items{
- 	padding-right: 45px;
+ 	padding-right: 95px;
 	float: right;
 }
 
@@ -293,14 +392,14 @@ export default {
 
 #repondedChip{
 	position: relative;
-	top: -605px;
+	top: -604px;
 	left: 10px;
 	color: white;
 	background-color: #37474F;
 	opacity: 0.8;
 	font-size: 16px;
 	width: 380px;
-	height: 42px;
+	height: 40px;
 	text-align: center;
 	border-radius: 5px;
 	vertical-align: middle;
@@ -310,7 +409,7 @@ export default {
 
 #notrepondedChip{
 	position: relative;
-	bottom:93px;
+	bottom:90px;
 	left: 10px;
 	color: white;
 	background-color: #37474F;
@@ -338,6 +437,16 @@ export default {
 
 circle:hover {
    transform: scale(1.1);
+}
+
+.elabel{
+	display: inline-block;
+	text-decoration: none;
+	font-size: 16px;
+	color: #37474F;
+	font-weight: bold;
+	margin-top: 35px;
+	margin-bottom: 5px;
 }
 
 </style>
