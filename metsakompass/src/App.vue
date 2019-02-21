@@ -38,14 +38,13 @@
  	  	<div v-for="p in sortParties">
  	  	  <v-layout>
  	  	  <v-flex sm1 xs1 md1>
- 	  	  	<span class="ix" :title="p.total">{{p.i}}.</span>
  	  	  </v-flex>
  	  	  	<v-flex sm3 xs3 md3>
  	  			<div class="plogo" :style="getStyle(p)" :title="p.name">
  	  			</div>
  	  		</v-flex>
  	  		<v-flex sm3 xs3 md3>
- 	  		<v-btn :color="getCandidateColor(p.total)" fab dark>
+ 	  		<v-btn :color="getCandidateColor(p.total)" fab dark  >
     		 </v-btn>
  	  		</v-flex>
  	  	</v-layout>	
@@ -63,7 +62,9 @@
   		<template slot="items" slot-scope="props">
      		<template v-if="!props.item.divider">
     
-     		 	<td>{{ props.item.name }}</td>
+     		 	<td>
+     		 		<a :href="getLink(props.item)" class="nimi" title = "Ava Piirkonna Leht">{{ props.item.name }}</a>
+     		 		</td>
       		 	<td class="text-xs-right">
       		 	<template v-if="sort==1">
       		 		{{ props.item.erakond }}
@@ -83,7 +84,7 @@
     		 	
     		 		<v-tooltip right>
       					<template >
-        					<v-btn slot="activator" :color="getCandidateColor(props.item.total)" fab dark >
+        					<v-btn slot="activator" :color="getCandidateColor(props.item.total)" fab dark  @click.native="openAnkeet(props.item)">
     		 					{{ props.item.nr }}
     		 				</v-btn>
   						</template>
@@ -141,6 +142,7 @@
 <script>
 import Vue from 'vue';
 import VueResource from 'vue-resource';
+import backup from './assets/backup.json';
 
 import LoadScript from 'vue-plugin-load-script';
 Vue.use(LoadScript);
@@ -153,6 +155,7 @@ export default {
 	    	API_KEY: "AIzaSyBm00X5S1A4rNc4MlyR6yRyQaR5un7Qb40", // "AIzaSyDoaUoLlpzmIqWpYg_eAhlbFtRvuAjUcPg", 
 	    	api: "https://sheets.googleapis.com/v4/spreadsheets/11r-tkO-eiBq-Nwj3au7UPEDq4hvc8xuvykwGDIgvgW8",
 	    	sheet1: "https://sheets.googleapis.com/v4/spreadsheets/11r-tkO-eiBq-Nwj3au7UPEDq4hvc8xuvykwGDIgvgW8/values/Sheet1!A1:M1025",
+	    	root:"http://eestimetsaabiks.emaliikumine.ee/index.php/",
 	    	candidates:[],
 	    	headers:[],
 	    	loaded: false,
@@ -200,143 +203,23 @@ export default {
 	    .then(() => {
 	      console.log("done loading");
 	      
-		  this.$http.get(this.sheet1,{params:{key:this.API_KEY}}).then(response => {
-		       
-			    var headers = response.body.values.shift();
-			    this.headers = headers;
-			    var party = headers.indexOf('Erakonna nimekiri');
-			    var responded = headers.indexOf('Vastanud');
-			    var f = headers.indexOf('First Name');
-			    var l = headers.indexOf('Last Name');
-			    var nr = headers.indexOf('Kandidaadi number');
-			    var rk = headers.indexOf('Omavalitsus');
-			    
-			    var petitsioon = headers.indexOf('Petitsioon');
-			    var biomass = headers.indexOf('Biomass');
-			    var raiemaht = headers.indexOf('Raiemaht');
-			    var majandus = headers.indexOf('Metsamajandus');
-			    var jaht = headers.indexOf('Jaht');
-			    var poliitika = headers.indexOf('Poliitika');
-			     
-			    for(var c in response.body.values){
-		        	var canditate =  response.body.values[c]; 	
-		        	
-		        	var p = this.parties[canditate[party]];
-		        	var r = canditate[responded];
-		        	var n = canditate[nr];
-		        	var ring = canditate[rk] != null ? canditate[rk] : "x";
-		        	
-		        	canditate.nr  = n;
-		        	
-		        	canditate.ringkond = ring;
-		        	canditate.divider=false;
-		        	canditate.erakond = canditate[party];
-		        	canditate.name = canditate[f]+" "+canditate[l];
-		        
-		        	
-				    canditate.petitsioon = canditate[petitsioon].length != 0  ? parseInt(canditate[petitsioon]) : 0;
-				    canditate.biomass = canditate[biomass].length != 0  ? parseInt(canditate[biomass]) : 0;
-				    canditate.raiemaht = canditate[raiemaht].length != 0  ? parseInt(canditate[raiemaht]) : 0;
-				    canditate.majandus = canditate[majandus].length != 0  ? parseInt(canditate[majandus]) : 0;
-				    canditate.jaht = canditate[jaht].length != 0  ? parseInt(canditate[jaht]) : 0;
-				    canditate.poliitika =canditate[poliitika].length != 0 ? parseInt(canditate[poliitika]) : 0;
-				    
-				    canditate.total  = 		    
-				    	parseFloat((canditate.petitsioon +
-				    	canditate.biomass +
-				    	canditate.raiemaht +
-				    	canditate.majandus +
-				    	canditate.jaht +
-				    	canditate.poliitika) / 6 );
-		        	
-				    if(isNaN(canditate.total)){
-				    	canditate.total = 0;
-				    }
-				    
-				    
-				    
-		        	if(p != undefined){
-		        		canditate.party  = p;
-			        	p.candidates++;
-			        	this.candidatesTotal++;
-			        	if(r != undefined && r == "x"){
-			        		this.respondersTotal++;
-			        		p.responded++;
-			        		p.total = p.total +  canditate.total;
-			        		this.candidates.push(canditate);
-			        	}else{
-			        		p.notresponded++;
-			        		this.notRespondersTotal++;
-			        	}
-		        		
-		        	}
+		  this.$http.get(this.sheet1,{params:{key:this.API_KEY}}).then(
+		
+			response => {   
+			  this.dataLloaded( {body: response.body});
+		  	},
+			response => {
+			    this.dataLloaded({body: backup});
+			}
 
-		        }
-		        
-				var weights =  [];
-			    for(var p in this.parties){
-			    	var party = this.parties[p];
-			    	party.total = parseFloat(party.total / party.responded);
-			    	weights.push({responded:party.responded,party:p});
-			    	if(party.responded > 0){
-			    		this.responded.children.push(
-			    			{name:p,
-			    				total:party.candidates,
-			    				code:party.code, 
-			    				color: party.color,
-			    				responded: party.responded,
-			    				size: this.calculateRespondedPercent(party)
-			    			});	
-			    		this.notresponded.children.push(
-			    			{name:p,
-			    				total:party.candidates, 
-			    				code:party.code,
-			    				color: party.color,
-			    				notresponded: party.notresponded,
-			    				size:this.calculateNotRespondedPercent(party)
-			    			});
-			    	}else{
-			    		this.notresponded.children.push(
-			    			{name:p,
-			    				total:party.candidates,
-			    				code:party.code, 
-			    				color: party.color,
-			    				notresponded: party.notresponded,
-			    				size:this.calculateNotRespondedPercent(party)
-			    			});
-			    	}
-			    	
-			    	
-			    }
-			    
-	    		this.respondedTotal.children.push(
-		    		{name:"responded",
-		    			color: "#75F212",
-		    			size: this.calculateRespondedTotal()
-		    		}
-		    	);	
-	    		
-	    		this.respondedTotal.children.push(
-			    	{name:"notresponded",
-			    		color: "red",
-			    		size: this.calculatenotRespondedTotal()
-			    	}
-			    );	
-			    
-			    weights.sort((a, b) => {return b.responded-a.responded});
-			    for(var i in weights){
-			    	var p = weights[i];
-			    	this.parties[p.party].order = this.chars[i];
-			    }
-			    
-			    this.drawTotalChart(this.respondedTotal,"#respondedTotal");		    
-		        this.drawFeedbackChart(this.responded,"#responded");
-		        this.drawFeedbackChart(this.notresponded,"#notresponded");
-		    	
-		        this.loaded=true;
- 
-		  });	      
-	   });
+		  );	      
+	   }
+	    
+	    
+	    
+	    
+	    
+	    );
   },
   computed:{
 		
@@ -356,10 +239,11 @@ export default {
 	sortCandidates: function(){
 		if(this.sort == 1){
 			return this.candidates.sort((a, b) => {
-				var c = a[2]+a[1];
-				var d = b[2]+b[1];
-				return c.localeCompare(d)
-				}
+				//var c = a[2]+a[1];
+				//var d = b[2]+b[1];
+				//return c.localeCompare(d)
+				return a.total - b.total;	
+			}
 			);
 		}else if (this.sort == 3){
 			
@@ -569,6 +453,193 @@ export default {
 			  c = "red";  
 		  }
 		  return "color: "+c+";"
+	  },
+	  getLink: function(c){
+		  var link = "#";
+		  if (c.ringkond == "Harju- ja Raplamaa"){
+			 link = "4578-2";
+		  }else if(c.ringkond ==  "Hiiu-, Lääne- ja Saaremaa"){
+			  link = "eesti-metsa-abiks-kandidaadikusitlus-2019-laane-virumaa";
+		  }else if(c.ringkond ==  "Ida-Virumaa"){
+			  link = "#1";
+		  }else if(c.ringkond ==  "Jõgeva- ja Tartumaa"){
+			  link = "4740-2";
+		  }else if(c.ringkond == "Järva- ja Viljandimaa"){
+			  link = "#1";
+		  }else if(c.ringkond ==  "Kesklinn, Lasnamäe ja Pirita"){
+			  link = "4491-2";
+		  }else if(c.ringkond == "Lääne-Virumaa"){
+			  link = "eesti-metsa-abiks-kandidaadikusitlus-2019-laane-virumaa";
+		  }else if(c.ringkond ==  "Nõmme ja Mustamäe"){
+			  link = "4566-2";
+		  }else if(c.ringkond ==  "Põhja Tallinn, Kristiine, Haabersti"){
+			  link = "4527-2";
+		  }else if(c.ringkond ==   "Pärnumaa"){
+			  link = "4650-2";
+		  }else if(c.ringkond ==   "Saare, - Lääne – ja Hiiumaa"){
+			  link = "4616-2";
+		  }else if(c.ringkond ==   "Tallinn Kesklinn, Lasnamäe ja Pirita"){
+			  link = "4491-2";
+		  }else if(c.ringkond ==    "Tartu linn"){
+			  link = "4669-2";
+		  }else if(c.ringkond ==    "Võru-, Valga- ja Põlvamaa"){
+			  link = "4714-2";
+		  }
+		  
+		  
+		  return this.root+link;
+		  
+	  },
+	  openAnkeet: function(c){
+		  var win = window.open(this.getLink(c), '_blank');
+	  },
+	  dataLloaded(response){
+
+		    var headers = response.body.values.shift();
+		    this.headers = headers;
+		    var party = headers.indexOf('Erakonna nimekiri');
+		    var responded = headers.indexOf('Vastanud');
+		    var f = headers.indexOf('First Name');
+		    var l = headers.indexOf('Last Name');
+		    var nr = headers.indexOf('Kandidaadi number');
+		    var rk = headers.indexOf('Omavalitsus');
+		    
+		    var petitsioon = headers.indexOf('Petitsioon');
+		    var biomass = headers.indexOf('Biomass');
+		    var raiemaht = headers.indexOf('Raiemaht');
+		    var majandus = headers.indexOf('Metsamajandus');
+		    var jaht = headers.indexOf('Jaht');
+		    var poliitika = headers.indexOf('Poliitika');
+		     
+		    for(var c in response.body.values){
+	        	var canditate =  response.body.values[c]; 	
+	        	
+	        	var p = this.parties[canditate[party]];
+	        	var r = canditate[responded];
+	        	var n = canditate[nr];
+	        	var ring = canditate[rk] != null ? canditate[rk] : "x";
+	        	
+	        	canditate.nr  = n;
+	        	
+	        	canditate.ringkond = ring;
+	        	canditate.divider=false;
+	        	canditate.erakond = canditate[party];
+	        	canditate.name = canditate[f]+" "+canditate[l];
+	        
+	        	
+			    canditate.petitsioon = canditate[petitsioon].length != 0  ? parseInt(canditate[petitsioon]) : 0;
+			    canditate.biomass = canditate[biomass].length != 0  ? parseInt(canditate[biomass]) : 0;
+			    canditate.raiemaht = canditate[raiemaht].length != 0  ? parseInt(canditate[raiemaht]) : 0;
+			    canditate.majandus = canditate[majandus].length != 0  ? parseInt(canditate[majandus]) : 0;
+			    canditate.jaht = canditate[jaht].length != 0  ? parseInt(canditate[jaht]) : 0;
+			    canditate.poliitika =canditate[poliitika].length != 0 ? parseInt(canditate[poliitika]) : 0;
+			    
+			    var divider = 0;
+			    divider = divider + (canditate.petitsioon == 0 ? 0 : 1);
+			    divider = divider + (canditate.biomass == 0 ? 0 : 1);
+			    divider = divider + (canditate.raiemaht == 0 ? 0 : 1);
+			    divider = divider + (canditate.majandus == 0 ? 0 : 1);
+			    divider = divider + (canditate.jaht == 0 ? 0 : 1);
+			    divider = divider + (canditate.poliitika == 0 ? 0 : 1);
+			    divider = divider == 0 ? 1 : divider;
+				
+			    canditate.total  = 		    
+			    	parseFloat((canditate.petitsioon +
+			    	canditate.biomass +
+			    	canditate.raiemaht +
+			    	canditate.majandus +
+			    	canditate.jaht +
+			    	canditate.poliitika) / divider );
+	        	
+			    if(isNaN(canditate.total)){
+			    	canditate.total = 3;
+			    }else if(canditate.total == 0){
+			    	canditate.total = 3;
+			    }
+			    
+			    
+			    
+	        	if(p != undefined){
+	        		canditate.party  = p;
+		        	p.candidates++;
+		        	this.candidatesTotal++;
+		        	if(r != undefined && r == "x"){
+		        		this.respondersTotal++;
+		        		p.responded++;
+		        		p.total = p.total +  canditate.total;
+		        		this.candidates.push(canditate);
+		        	}else{
+		        		p.notresponded++;
+		        		this.notRespondersTotal++;
+		        	}
+	        		
+	        	}
+
+	        }
+	        
+			var weights =  [];
+		    for(var p in this.parties){
+		    	var party = this.parties[p];
+		    	party.total = parseFloat(party.total / party.responded);
+		    	weights.push({responded:party.responded,party:p});
+		    	if(party.responded > 0){
+		    		this.responded.children.push(
+		    			{name:p,
+		    				total:party.candidates,
+		    				code:party.code, 
+		    				color: party.color,
+		    				responded: party.responded,
+		    				size: this.calculateRespondedPercent(party)
+		    			});	
+		    		this.notresponded.children.push(
+		    			{name:p,
+		    				total:party.candidates, 
+		    				code:party.code,
+		    				color: party.color,
+		    				notresponded: party.notresponded,
+		    				size:this.calculateNotRespondedPercent(party)
+		    			});
+		    	}else{
+		    		this.notresponded.children.push(
+		    			{name:p,
+		    				total:party.candidates,
+		    				code:party.code, 
+		    				color: party.color,
+		    				notresponded: party.notresponded,
+		    				size:this.calculateNotRespondedPercent(party)
+		    			});
+		    	}
+		    	
+		    	
+		    }
+		    
+    		this.respondedTotal.children.push(
+	    		{name:"responded",
+	    			color: "#75F212",
+	    			size: this.calculateRespondedTotal()
+	    		}
+	    	);	
+    		
+    		this.respondedTotal.children.push(
+		    	{name:"notresponded",
+		    		color: "red",
+		    		size: this.calculatenotRespondedTotal()
+		    	}
+		    );	
+		    
+		    weights.sort((a, b) => {return b.responded-a.responded});
+		    for(var i in weights){
+		    	var p = weights[i];
+		    	this.parties[p.party].order = this.chars[i];
+		    }
+		    
+		    this.drawTotalChart(this.respondedTotal,"#respondedTotal");		    
+	        this.drawFeedbackChart(this.responded,"#responded");
+	        this.drawFeedbackChart(this.notresponded,"#notresponded");
+	    	
+	        this.loaded=true;
+
+ 
 	  }
 	  
   }
@@ -732,6 +803,11 @@ export default {
 	vertical-align: middle;
 	line-height: 70px;
 	font-weight: bold;
+}
+
+.nimi{
+	color: #424242;
+	text-decoration: none;
 }
 
 </style>
