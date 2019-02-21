@@ -465,7 +465,7 @@ export default {
 		  }else if(c.ringkond ==  "Jõgeva- ja Tartumaa"){
 			  link = "4740-2";
 		  }else if(c.ringkond == "Järva- ja Viljandimaa"){
-			  link = "#1";
+			  link = "4758-2";
 		  }else if(c.ringkond ==  "Kesklinn, Lasnamäe ja Pirita"){
 			  link = "4491-2";
 		  }else if(c.ringkond == "Lääne-Virumaa"){
