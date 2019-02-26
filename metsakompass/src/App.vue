@@ -5,8 +5,11 @@
   <v-layout align-center justify-center>
 
 
-  <v-flex xs12>
-    
+  </v-flex>
+  <v-flex xs12 md12>
+     <div id="logo">
+     	<span class=" logotext display-1">EMA kandidaadiküsitlus 2019</span>
+     </div>
 		
   	 <div id="toolbar">
   	 	<div id="diagrams">
@@ -176,6 +179,8 @@ export default {
 	    		"Eesti Konservatiivne Rahvaerakond":{code:"EK",image:"/images/ekre.png",color:"#0077BD",candidates:0,responded:0,notresponded:0,order:"h",total:0},
 	    		"Sotsiaaldemokraatlik Erakond":{code:"SE",color:"#E10600",image:"/images/sde.png",candidates:0,responded:0,notresponded:0,order:"i",total:0}
 	    	},
+	    	yksik:{code:"SE",color:"#E10600",image:"/images/sde.png",candidates:0,responded:0,notresponded:0,order:"i",total:0},
+
 	    	responded:{
 	    		name:"responded",
 	    		color:"transparent",
@@ -408,15 +413,15 @@ export default {
 	  },
 	  getCandidateColor: function(i){
 		  if (i == 0){
-			  return "#757575";
+			  return "black";
 		  }else if(i < 1.22){
 			  return "#75F212";
 		  }else if(i < 1.44){
-			  return "#75F212";
+			  return "lime";
 		  }else if(i < 1.66){
-			  return "#689F38";
+			  return "lime";
 		  }else if(i < 1.88){
-			  return "lime";  
+			  return "orange";  
 		  }else if(i < 2.10){
 			  return "orange";  
 		  }else if(i < 2.32){
@@ -432,15 +437,15 @@ export default {
 	  getCandidateColorB: function(i){
 		  var c = "";
 		  if (i == 0){
-			  c = "#757575";
+			  c = "black";
 		  }else if(i < 1.22){
 			  c = "#75F212";
 		  }else if(i < 1.44){
-			  c = "#75F212";
+			  c = "lime";
 		  }else if(i < 1.66){
-			  c = "#689F38";
+			  c = "lime";
 		  }else if(i < 1.88){
-			  c = "lime";  
+			  c = "orange";  
 		  }else if(i < 2.10){
 			  c = "orange";  
 		  }else if(i < 2.32){
@@ -487,7 +492,7 @@ export default {
 		  }
 		  
 		  
-		  return this.root+link;
+		  return this.root+link+"#"+c.name;
 		  
 	  },
 	  openAnkeet: function(c){
@@ -572,6 +577,13 @@ export default {
 		        		p.notresponded++;
 		        		this.notRespondersTotal++;
 		        	}
+	        		
+	        	}else{
+	        		 		
+	        		canditate.party  = this.yksik;
+		        	if(r != undefined && r == "x"){
+		        		this.candidates.push(canditate);
+		        	}	        		
 	        		
 	        	}
 
@@ -689,11 +701,23 @@ export default {
 }
 
 
+#logo{
+	height: 100px;
+	background-image:  url("./assets/emasmall.png");
+	padding-left: 150px;
+	padding-top: 40px;
+	  position: sticky;
+}
+
+.logotext{
+	color: #37474F;
+}
+
+
 #diagram1 {
   background-image:  url("./assets/liivakell.png");
   width:  400px;
   height: 602px;
-  position: sticky;
   top: 100px;
 }
 
@@ -808,6 +832,11 @@ export default {
 .nimi{
 	color: #424242;
 	text-decoration: none;
+}
+
+
+.logo{
+	height: 150px;
 }
 
 </style>
